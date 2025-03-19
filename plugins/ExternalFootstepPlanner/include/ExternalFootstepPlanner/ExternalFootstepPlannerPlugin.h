@@ -6,7 +6,7 @@
 
 #include <mc_control/GlobalPlugin.h>
 
-#include <sensor_msgs/Joy.h>
+#include <sensor_msgs/msg/joy.h>
 
 #include <ExternalFootstepPlanner/ExternalFootstepPlanner.h>
 #include <ExternalFootstepPlanner/ExternalFootstepPlannerPlugin.h>
