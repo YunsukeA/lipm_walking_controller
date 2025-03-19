@@ -6,7 +6,7 @@
 
 #include <mc_control/GlobalPlugin.h>
 
-#include <sensor_msgs/msg/joy.h>
+#include <sensor_msgs/msg/joy.hpp>
 
 #include <ExternalFootstepPlanner/ExternalFootstepPlanner.h>
 #include <ExternalFootstepPlanner/ExternalFootstepPlannerPlugin.h>
@@ -121,7 +121,7 @@ protected:
    * @param joystickInput ROS message for biped walking in local frame
    * @see setLocalPositionTarget
    */
-  void setJoystickVelocityTarget(const sensor_msgs::Joy & joystickInput);
+  void setJoystickVelocityTarget(const sensor_msgs::msg::Joy & joystickInput);
 
   /**
    * @brief Add GUI elements that are visible when the planner is available
@@ -184,7 +184,7 @@ protected:
 
 protected:
   void joystickSubscribeThread();
-  void joystick_callback(const sensor_msgs::JoyConstPtr & joystick_input);
+  void joystick_callback(const sensor_msgs::msg::JoyConstPtr & joystick_input);
   std::string joystick_topic_ = "/avatar/joy";
   double rate_ = 30;
   bool run_{false};

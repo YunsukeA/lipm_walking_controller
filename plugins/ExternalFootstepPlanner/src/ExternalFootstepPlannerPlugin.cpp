@@ -80,7 +80,7 @@ void ExternalFootstepPlannerPlugin::init(mc_control::MCGlobalController & gc, co
   ctl.datastore().make_call("ExternalFootstepPlanner::RequestHybridPlan", [this]() { request_hybrid_plan_ = true; });
   /* Tsuru add */
   ctl.datastore().make_call("ExternalFootstepPlanner::SetJoystickVelocityTarget",
-                            [this](const sensor_msgs::Joy & joystickInput)
+                            [this](const sensor_msgs::msg::Joy & joystickInput)
                             { setJoystickVelocityTarget(joystickInput); });
 
   // Call this to request a new plan
@@ -205,7 +205,7 @@ void ExternalFootstepPlannerPlugin::setLocalVelocityPlanningDistance(const SE2d 
 }
 
 /* Tsuru add */
-void ExternalFootstepPlannerPlugin::setJoystickVelocityTarget(const sensor_msgs::Joy & joystickInput)
+void ExternalFootstepPlannerPlugin::setJoystickVelocityTarget(const sensor_msgs::msg::Joy & joystickInput)
 {
   SE2d localVelocity;
 
@@ -244,25 +244,19 @@ void ExternalFootstepPlannerPlugin::changeTargetType(const std::string & targetT
   {
     gui.addElement(this, category,
                    XYTheta(
-                       "World target [m, rad]",
-                       [this]() -> std::array<double, 4> {
-                         return {worldPositionTarget_.x, worldPositionTarget_.y, worldPositionTarget_.theta, 0.};
-                       },
-                       [this](const std::array<double, 4> & target) {
-                         setWorldPositionTarget({target[0], target[1], target[2]});
-                       }));
+                       "World target [m, rad]", [this]() -> std::array<double, 4>
+                       { return {worldPositionTarget_.x, worldPositionTarget_.y, worldPositionTarget_.theta, 0.}; },
+                       [this](const std::array<double, 4> & target)
+                       { setWorldPositionTarget({target[0], target[1], target[2]}); }));
   }
   else if(targetType == "Local SE2")
   {
     gui.addElement(this, category,
                    ArrayInput(
-                       "Local target [m, rad]",
-                       [this]() -> std::array<double, 3> {
-                         return {localPositionTarget_.x, localPositionTarget_.y, localPositionTarget_.theta};
-                       },
-                       [this](const std::array<double, 3> & target) {
-                         setLocalPositionTarget({target[0], target[1], target[2]});
-                       }));
+                       "Local target [m, rad]", [this]() -> std::array<double, 3>
+                       { return {localPositionTarget_.x, localPositionTarget_.y, localPositionTarget_.theta}; },
+                       [this](const std::array<double, 3> & target)
+                       { setLocalPositionTarget({target[0], target[1], target[2]}); }));
   }
   else if(targetType == "Local Velocity")
   {
@@ -302,10 +296,8 @@ void ExternalFootstepPlannerPlugin::changeTargetType(const std::string & targetT
     makeSliders();
     gui.addElement(this, category,
                    ArrayInput(
-                       "Planning Distance", {"x [m]", "y [m]", "theta [rad]"},
-                       [this]() -> std::array<double, 3> {
-                         return {planningDistance_.x, planningDistance_.y, planningDistance_.theta};
-                       },
+                       "Planning Distance", {"x [m]", "y [m]", "theta [rad]"}, [this]() -> std::array<double, 3>
+                       { return {planningDistance_.x, planningDistance_.y, planningDistance_.theta}; },
                        [this, makeSliders](const std::array<double, 3> & d)
                        {
                          setLocalVelocityPlanningDistance({d[0], d[1], d[2]});
@@ -395,23 +387,24 @@ void ExternalFootstepPlannerPlugin::joystickSubscribeThread()
   // Service to request generation of a footstep plan
   // XXX: calling it should cancel the previous ongoing request (this is not the case in OnlineFootstepPlanner)
 
-  ros::Subscriber ps4_sub =
-      nh.subscribe<sensor_msgs::Joy>(joystick_topic_, 1, &ExternalFootstepPlannerPlugin::joystick_callback, this);
+  auto node = rclcpp::Node::make_shared("joystick_subscriber");
+  auto ps4_sub = node->create_subscription<const sensor_msgs::msg::Joy::SharedPtr>(
+      joystick_topic_, 1, [this](const sensor_msgs::msg::Joy::SharedPtr msg) { joystick_callback(*msg); });
 
-  ros::Rate rate(rate_);
-  while(ros::ok() && run_)
+  rclcpp::Rate rate(rate_);
+  while(rclcpp::ok() && run_)
   {
     /* * * * * * * * * * * * */
     /* Receive Joystic Input */
     /* * * * * * * * * * * * */
     // if(controller is available)
-    ros::spinOnce(); // for Joystick callback function
+    rclcpp::spin_some(node); // for Joystick callback function
     rate.sleep();
   }
   mc_rtc::log::info("[{}] Joystick subscribe thread stopped", name());
 }
 
-void ExternalFootstepPlannerPlugin::joystick_callback(const sensor_msgs::JoyConstPtr & joystick_input)
+void ExternalFootstepPlannerPlugin::joystick_callback(const sensor_msgs::msg::JoyConstPtr & joystick_input)
 {
   // ROS_WARN("joystick callback start");
   // ROS_WARN("%1.2f, %1.2f, %1.2f, %1.2f", joystick_input->axes.at(0), joystick_input->axes.at(1),
