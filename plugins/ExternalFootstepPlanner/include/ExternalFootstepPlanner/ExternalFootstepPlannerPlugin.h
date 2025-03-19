@@ -184,7 +184,7 @@ protected:
 
 protected:
   void joystickSubscribeThread();
-  void joystick_callback(const sensor_msgs::msg::JoyConstPtr & joystick_input);
+  void joystick_callback(const sensor_msgs::msg::Joy::SharedPtr & joystick_input);
   std::string joystick_topic_ = "/avatar/joy";
   double rate_ = 30;
   bool run_{false};

@@ -388,8 +388,8 @@ void ExternalFootstepPlannerPlugin::joystickSubscribeThread()
   // XXX: calling it should cancel the previous ongoing request (this is not the case in OnlineFootstepPlanner)
 
   auto node = rclcpp::Node::make_shared("joystick_subscriber");
-  auto ps4_sub = node->create_subscription<const sensor_msgs::msg::Joy::SharedPtr>(
-      joystick_topic_, 1, [this](const sensor_msgs::msg::Joy::SharedPtr msg) { joystick_callback(*msg); });
+  auto ps4_sub = node->create_subscription<sensor_msgs::msg::Joy>(
+      joystick_topic_, 1, [this](sensor_msgs::msg::Joy::SharedPtr msg) { joystick_callback(msg); });
 
   rclcpp::Rate rate(rate_);
   while(rclcpp::ok() && run_)
@@ -404,7 +404,7 @@ void ExternalFootstepPlannerPlugin::joystickSubscribeThread()
   mc_rtc::log::info("[{}] Joystick subscribe thread stopped", name());
 }
 
-void ExternalFootstepPlannerPlugin::joystick_callback(const sensor_msgs::msg::JoyConstPtr & joystick_input)
+void ExternalFootstepPlannerPlugin::joystick_callback(const sensor_msgs::msg::Joy::SharedPtr & joystick_input)
 {
   // ROS_WARN("joystick callback start");
   // ROS_WARN("%1.2f, %1.2f, %1.2f, %1.2f", joystick_input->axes.at(0), joystick_input->axes.at(1),
